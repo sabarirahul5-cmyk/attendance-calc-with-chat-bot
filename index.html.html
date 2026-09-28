@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Attendance Predictor</title>
+<style>
+:root{--bg:#f6f7fb;--card:#fff;--tx:#1c2033;--mu:#66708a;--bd:#e2e5ef;--ac:#4f46e5;--ok:#15803d;--wn:#b45309;--er:#b91c1c;--erbg:#fee2e2;--okbg:#dcfce7;--wnbg:#fef3c7;box-sizing:border-box}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#12141c;--card:#1c1f2b;--tx:#eceef6;--mu:#9aa3bd;--bd:#2c3042;--ac:#818cf8;--ok:#4ade80;--wn:#fbbf24;--er:#f87171;--erbg:#3b1518;--okbg:#12301c;--wnbg:#3a2a0c}}
+:root[data-theme="dark"]{--bg:#12141c;--card:#1c1f2b;--tx:#eceef6;--mu:#9aa3bd;--bd:#2c3042;--ac:#818cf8;--ok:#4ade80;--wn:#fbbf24;--er:#f87171;--erbg:#3b1518;--okbg:#12301c;--wnbg:#3a2a0c}
+*{box-sizing:border-box}html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--tx);font:15px/1.5 system-ui,-apple-system,Segoe UI,sans-serif;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+main{max-width:900px;margin:0 auto;padding:16px 16px 90px}
+h1{margin:4px 0;font-size:24px}h2{font-size:16px;margin:0 0 10px}p.s{color:var(--mu);margin:0 0 14px}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:14px;margin-bottom:14px}
+.row{display:flex;flex-wrap:wrap;gap:12px}.row>div{flex:1 1 160px}
+label{display:block;font-size:12px;color:var(--mu);margin-bottom:3px}
+input,select,textarea,button{font:inherit;color:var(--tx);background:var(--bg);border:1px solid var(--bd);border-radius:8px;padding:8px;width:100%}
+button{background:var(--ac);color:#fff;border:0;cursor:pointer;width:auto;padding:8px 14px}
+button.g{background:transparent;color:var(--ac);border:1px solid var(--bd);padding:4px 10px;font-size:13px}
+.subj{display:grid;grid-template-columns:1fr 130px;gap:8px;align-items:center;margin-bottom:8px}
+.res{border:1px solid var(--bd);border-left:5px solid var(--ok);border-radius:10px;padding:12px;margin-bottom:12px;background:var(--card)}
+.res.warn{border-left-color:var(--wn)}.res.bad{border-left-color:var(--er)}
+.res h3{margin:0 0 6px;font-size:16px;display:flex;justify-content:space-between;gap:8px}
+.tag{font-size:12px;padding:2px 8px;border-radius:99px;background:var(--okbg);color:var(--ok);white-space:nowrap;align-self:flex-start}
+.warn .tag{background:var(--wnbg);color:var(--wn)}.bad .tag{background:var(--erbg);color:var(--er)}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px}
+.m{background:var(--bg);border-radius:8px;padding:8px}.m b{display:block;font-size:20px}.m span{font-size:12px;color:var(--mu)}
+.alert{background:var(--er);color:#fff;border-radius:8px;padding:10px 12px;font-weight:700;margin:8px 0;animation:p 1s infinite alternate}
+@keyframes p{to{opacity:.72}}
+.bar{height:8px;background:var(--bd);border-radius:5px;position:relative;margin:8px 0}.bar i{position:absolute;left:0;top:0;bottom:0;border-radius:5px;background:var(--ac)}
+.bar u{position:absolute;top:-3px;bottom:-3px;width:2px;background:var(--er)}.bar u+u{background:var(--ok)}
+small{color:var(--mu)}details summary{cursor:pointer;color:var(--ac)}
+.charts{display:grid;grid-template-columns:1fr;gap:14px}
+@media(min-width:720px){.charts .half{display:grid;grid-template-columns:230px 1fr;gap:14px;align-items:center}}
+.chip{display:inline-block;background:var(--bg);border:1px solid var(--bd);border-radius:99px;padding:3px 10px;margin:2px 4px 2px 0;font-size:13px}
+.chip button{background:none;color:var(--er);padding:0 0 0 6px;width:auto;border:0}
+.leg{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--mu)}.leg i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:4px}
+/* chatbot */
+.fab{position:fixed;right:16px;bottom:calc(16px + env(safe-area-inset-bottom,0px));width:58px;height:58px;border-radius:50%;font-size:26px;padding:0;box-shadow:0 4px 14px rgba(0,0,0,.3);z-index:50}
+.chat{position:fixed;right:16px;bottom:calc(84px + env(safe-area-inset-bottom,0px));width:min(390px,calc(100vw - 32px));height:min(540px,calc(100% - 110px - env(safe-area-inset-bottom,0px)));background:var(--card);border:1px solid var(--bd);border-radius:14px;box-shadow:0 8px 30px rgba(0,0,0,.3);display:none;flex-direction:column;z-index:50;overflow:hidden}
+.chat.on{display:flex}.chat header{background:var(--ac);color:#fff;padding:10px 12px;font-weight:600;display:flex;justify-content:space-between}
+.chat header span{cursor:pointer}
+#msgs{flex:1;overflow:auto;padding:10px;display:flex;flex-direction:column;gap:8px}
+.b{max-width:92%;padding:8px 10px;border-radius:12px;font-size:14px;background:var(--bg);border:1px solid var(--bd)}
+.b.u{align-self:flex-end;background:var(--ac);color:#fff;border-color:var(--ac)}
+.sug{padding:0 10px 6px;display:flex;flex-wrap:wrap;gap:4px}.sug button{background:var(--bg);color:var(--tx);border:1px solid var(--bd);border-radius:99px;padding:3px 9px;font-size:12px}
+.inp{display:flex;gap:6px;padding:8px;border-top:1px solid var(--bd)}
+</style></head><body><main>
+<h1>🎓 Attendance Predictor</h1>
+<p class="s">Semester 29 Aug 2026 → 29 Nov 2026. Pick your section, enter your current % per subject, plan leaves &amp; ODs, and ask the Attendance Advisor (💬 bottom-right).</p>
+
+<div class="card"><div class="row">
+<div><label>Class section</label><select id="sec"></select></div>
+<div><label>Today (auto-detected; editable)</label><input type="date" id="today"></div>
+<div><label>Planning date (future)</label><input type="date" id="plan"></div>
+</div>
+<p style="margin:10px 0 0"><label style="display:inline"><input type="checkbox" id="tdone" style="width:auto"> Today's classes are already over</label></p></div>
+
+<div class="card"><h2>Current attendance (%) per subject</h2><div id="subs"></div>
+<button id="go">Calculate</button></div>
+
+<div class="card"><h2>🧪 OD / Leave Simulator</h2>
+<p class="s" style="margin-bottom:8px">Add On-Duty, medical or planned-leave days; every chart and number below recalculates instantly. On future dates OD/medical classes count as attended and leave counts as missed; past OD/medical dates are credited as extra attended classes.</p>
+<div class="row"><div><label>Subject</label><select id="lvS"></select></div>
+<div><label>Type</label><select id="lvT"><option value="od">On-Duty (counts as present)</option><option value="med">Medical leave (counts as present, certificate)</option><option value="absent">Leave / absence (counts as absent)</option></select></div>
+<div><label>From</label><input type="date" id="lvF"></div><div><label>To</label><input type="date" id="lvE"></div></div>
+<p style="margin:10px 0 4px"><button id="lvAdd">Add to simulation</button> <button class="g" id="lvClr">Clear all</button></p><div id="lvList"></div></div>
+
+<div id="out"></div>
+
+<details class="card"><summary>Holidays &amp; custom timetable (optional)</summary>
+<p><small>Holidays: one date per line (YYYY-MM-DD). Sundays are always excluded. Custom timetable: CSV rows <code>section,day,subject</code> or JSON <code>{"A":{"Mon":["Maths",...]}}</code>.</small></p>
+<label>Holidays (no classes)</label><textarea id="hol" rows="3" placeholder="2026-10-02&#10;2026-10-20"></textarea>
+<label style="margin-top:8px">Upload / paste timetable</label><input type="file" id="file" accept=".csv,.json,.txt"><textarea id="paste" rows="3"></textarea>
+<button id="load" style="margin:8px 0">Load timetable</button> <small id="msg"></small></details>
+
+<button class="fab" id="fab" aria-label="Open Attendance Advisor">💬</button>
+<div class="chat" id="chat"><header>🤖 Attendance Advisor <span id="cx">✕</span></header><div id="msgs"></div><div class="sug" id="sug"></div>
+<div class="inp"><input id="q" placeholder="Ask e.g. can I skip Chemistry tomorrow?"><button id="send">Send</button></div></div>
+
+<script>
+const START=new Date(2026,7,29,12),END=new Date(2026,10,29,12),DAYS=["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+const $=id=>document.getElementById(id),iso=d=>d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
+const parse=s=>{const [y,m,d]=s.split("-").map(Number);return new Date(y,m-1,d,12)};
+const addD=(d,n)=>{const x=new Date(d);x.setDate(x.getDate()+n);return x};
+const fmt=n=>n.toFixed(1),esc=s=>s.replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const nice=d=>d.toLocaleDateString("en-IN",{day:"numeric",month:"short"});
+// Timetables transcribed from the supplied PDFs. Each row = periods 1..9 (blank = no class). One period = one class.
+const mk=(m,r)=>{const o={};for(const d in r)o[d]=r[d].split(",").map(x=>x.trim()).filter(Boolean).map(k=>m[k]||k);return o};
+const I1={E:"Philosophy of Engineering",A:"Advanced Calculus & Complex Analysis",B:"Chemistry",D:"Programming for Problem Solving",Gm:"German",CDC:"CDC",CL:"Chemistry Lab",PL:"PPS Lab",PCB:"PCB Lab / EC Lab",W:"Basic Civil & Mech Workshop",N:"NSS",Y:"Yoga",Jp:"Japanese"};
+const II={A:"Transforms & Boundary Value Problems",F:"Professional Ethics",G:"Universal Human Values-II",H:"Verbal Reasoning",I:"Social Engineering"};
+let TT={
+"II ECE-DS B":mk({...II,B:"Solid State Devices",C:"Computer Organization & Architecture",D:"Digital Logic Design",E:"Electromagnetic Theory & Interference",L:"Devices & Digital IC Lab"},
+ {Mon:",,L,L,,D,B,C,I",Tue:"L,L,,,,C,D,E,A",Wed:"G,,,,,I,E,A,D",Thu:"G,G,H,H,,A,C,B,E",Fri:"H,,,,,F,A,B,C"}),
+"II BME":mk({...II,B:"Biomedical Signals & Systems",C:"Electric & Electronic Circuits",D:"Digital Logic for Medical Systems",E:"Medical Physics",L:"DLMS/EEC Lab"},
+ {Mon:"E,C,I,I,,L,L,,",Tue:"C,E,B,A,,H,H,,",Wed:"B,D,A,,,H,G,,",Thu:"A,E,B,D,,,,L,L",Fri:"F,A,C,D,,,,G,G"}),
+"I ECE-A":mk({...I1,C:"Electronic System & PCB Design",F:"Biology"},
+ {Mon:"E,E,B,A,,CL,CL,F,CDC",Tue:"C,B,A,D,,W,W,W,W",Wed:"B,E,D,,,PL,PL,PCB,PCB",Thu:"Gm,Gm,Gm,A,,CDC,CDC,N,N",Fri:"D,A,C,B,,F,Gm,Gm,Gm"}),
+"I ECE-B":mk({...I1,F:"Electronic System & PCB Design",C:"Biology"},
+ {Mon:"CDC,F,CL,CL,,E,E,B,A",Tue:"W,W,W,W,,C,B,A,D",Wed:"F,PL,CDC,CDC,PL,,B,E,D",Thu:"N,N,C,A,,D,Gm,Gm,Gm",Fri:"PCB,PCB,,Gm,Gm,,,B,A"}),
+"I EEE":mk({...I1,F:"Electrical Circuits",C:"Biology"},
+ {Mon:"CDC,F,CL,CL,,E,E,B,A",Tue:"W,W,W,W,,C,B,A,D",Wed:"F,PL,CDC,CDC,PL,,B,E,D",Thu:"N,N,C,A,,D,Gm,Gm,Gm",Fri:"PCB,PCB,,Gm,Gm,,,B,A"}),
+"I ECE-DS":mk({...I1,C:"Electronic System & PCB Design",F:"Biology"},
+ {Mon:"F,CDC,PCB,PCB,,E,E,B,A",Tue:"CL,CL,N,N,,C,B,A,D",Wed:"CDC,CDC,A,,PL,PL,B,E,D",Thu:"F,A,D,Gm,Gm,,,C,B",Fri:"Gm,Gm,Gm,PL,,W,W,W,W"}),
+"I Biotech-B":mk({...I1,C:"Cell Biology",F:"Biochemistry"},
+ {Mon:"C,Y,Y,F,,E,E,A,B",Tue:"CDC,CDC,C,F,,,B,A,D",Wed:"W,W,W,W,,D,B,E,D",Thu:"CL,CL,A,C,,B,Jp,Jp,Jp",Fri:"F,CDC,A,Jp,Jp,,,PL,PL"}),
+"I BME":mk({...I1,G:"Human Physiology & Anatomy"},
+ {Mon:",Y,Y,G,,E,E,A,B",Tue:"CDC,CDC,,,,,B,A,D",Wed:"W,W,W,W,,D,B,E,D",Thu:"CL,CL,A,G,,B,Jp,Jp,Jp",Fri:",CDC,A,Jp,Jp,,,PL,PL"})
+};
+
+let LV=[],LAST=null;
+function fillSec(){const cur=$("sec").value;$("sec").innerHTML=Object.keys(TT).map(s=>`<option>${s}</option>`).join("");if(TT[cur])$("sec").value=cur;renderSubs()}
+function subjects(sec){const s=new Set();Object.values(TT[sec]).forEach(a=>a.forEach(x=>s.add(x)));return [...s]}
+function renderSubs(){const S=subjects($("sec").value);
+ $("subs").innerHTML=S.map(s=>`<div class="subj"><span>${s}</span><input type="number" min="0" max="100" step="0.1" placeholder="e.g. 78" data-s="${s}"></div>`).join("");
+ $("lvS").innerHTML='<option value="*">All subjects (full days)</option>'+S.map(s=>`<option>${s}</option>`).join("");
+ LV=[];renderLV();$("out").innerHTML="";LAST=null}
+function hols(){return new Set($("hol").value.split(/\s+/).filter(x=>/^\d{4}-\d\d-\d\d$/.test(x)))}
+function count(sec,from,to,H){const c={};subjects(sec).forEach(s=>c[s]=0);
+ for(let d=new Date(from);d<=to;d=addD(d,1)){if(d<START||d>END||H.has(iso(d)))continue;(TT[sec][DAYS[d.getDay()]]||[]).forEach(s=>c[s]++)}return c}
+
+/* ---------- core engine (also used by the chatbot) ---------- */
+function compute(extra){
+ const sec=$("sec").value,H=hols(),t=parse($("today").value),p=$("plan").value?parse($("plan").value):null;
+ const remFrom=$("tdone").checked?addD(t,1):t,heldTo=addD(remFrom,-1);
+ const held=count(sec,START,heldTo,H),rem=count(sec,remFrom,END,H),upto=p&&p>=remFrom?count(sec,remFrom,p,H):null;
+ const LM=new Map(),credit={};
+ LV.concat(extra||[]).forEach(l=>{const f=parse(l.from),to=parse(l.to);for(let d=new Date(f);d<=to;d=addD(d,1)){
+  if(d<START||d>END||H.has(iso(d)))continue;
+  (TT[sec][DAYS[d.getDay()]]||[]).forEach((s,i)=>{if(l.subj!=="*"&&l.subj!==s)return;const pr=l.type!=="absent";
+   if(d>=remFrom)LM.set(iso(d)+"|"+i+"|"+s,pr?"P":"A");else if(pr)credit[s]=(credit[s]||0)+1})}});
+ const fp={},fa={};LM.forEach((v,k)=>{const s=k.split("|")[2];(v==="P"?fp:fa)[s]=((v==="P"?fp:fa)[s]||0)+1});
+ const rows=[];
+ document.querySelectorAll("#subs input").forEach(inp=>{if(inp.value==="")return;
+  const s=inp.dataset.s,pct=+inp.value,h=held[s],R=rem[s],att0=pct/100*h,cr=Math.min(credit[s]||0,Math.max(0,h-att0)),att=att0+cr,T=h+R;
+  const P=fp[s]||0,A=fa[s]||0,free=R-P-A,base=att+P,n75=Math.max(0,Math.ceil(.75*T-base-1e-9)),n90=Math.max(0,Math.ceil(.9*T-base-1e-9));
+  rows.push({s,pct,h,R,T,att0,cr,att,fp:P,fa:A,free,base,n75,n90,lost:n75>free,lost90:n90>free,
+   cur:h?att/h*100:pct,best:T?(base+free)/T*100:0,worst:T?base/T*100:0,skip75:Math.max(0,free-n75),skip90:Math.max(0,free-n90)})});
+ return {sec,H,t,p,remFrom,held,rem,upto,LM,rows}}
+
+/* ---------- charts (inline SVG, theme-aware) ---------- */
+const col=r=>r.lost?"var(--er)":r.cur<75?"var(--wn)":"var(--ok)";
+const cut=(s,n)=>s.length>n?s.slice(0,n-1)+"…":s;
+function barChart(rows){const W=640,L=175,Rr=44,rh=38,H=rows.length*rh+44,pw=W-L-Rr,x=v=>L+pw*v/100;
+ let g=`<svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="Attendance by subject: current versus best possible final">`;
+ [0,25,50,75,90,100].forEach(v=>g+=`<line x1="${x(v)}" x2="${x(v)}" y1="6" y2="${H-28}" stroke="${v==75?"var(--er)":v==90?"var(--ok)":"var(--bd)"}" ${v==75||v==90?'stroke-dasharray="4 3"':""}/><text x="${x(v)}" y="${H-14}" font-size="10" text-anchor="middle" fill="var(--mu)">${v}%</text>`);
+ rows.forEach((r,i)=>{const y=12+i*rh;
+  g+=`<text x="${L-8}" y="${y+13}" font-size="11" text-anchor="end" fill="var(--tx)">${esc(cut(r.s,28))}</text>
+  <rect x="${x(0)}" y="${y}" width="${Math.max(1,pw*Math.min(100,r.cur)/100)}" height="13" rx="3" fill="${col(r)}"/>
+  <text x="${x(Math.min(100,r.cur))+4}" y="${y+11}" font-size="10" fill="var(--tx)">${fmt(r.cur)}%</text>
+  <rect x="${x(0)}" y="${y+16}" width="${Math.max(1,pw*Math.min(100,r.best)/100)}" height="8" rx="3" fill="var(--ac)" opacity=".45"/>
+  <text x="${x(Math.min(100,r.best))+4}" y="${y+24}" font-size="9" fill="var(--mu)">best ${fmt(r.best)}%</text>`});
+ return g+"</svg>"}
+function donut(rows){const A=rows.reduce((a,r)=>a+r.att,0),Hh=rows.reduce((a,r)=>a+r.h,0),pct=Hh?A/Hh*100:rows.reduce((a,r)=>a+r.pct,0)/rows.length,r0=52,c=2*Math.PI*r0;
+ const clr=pct>=90?"var(--ok)":pct>=75?"var(--ac)":"var(--er)";
+ return `<svg viewBox="0 0 140 140" width="180" role="img" aria-label="Overall attendance ${fmt(pct)} percent"><circle cx="70" cy="70" r="${r0}" fill="none" stroke="var(--bd)" stroke-width="14"/>
+ <circle cx="70" cy="70" r="${r0}" fill="none" stroke="${clr}" stroke-width="14" stroke-linecap="round" stroke-dasharray="${c*Math.min(100,pct)/100} ${c}" transform="rotate(-90 70 70)"/>
+ <text x="70" y="70" text-anchor="middle" font-size="24" font-weight="700" fill="var(--tx)">${fmt(pct)}%</text><text x="70" y="88" text-anchor="middle" font-size="10" fill="var(--mu)">overall now</text></svg>`}
+function lineChart(res,subj){const rows=subj==="*"?res.rows:res.rows.filter(r=>r.s===subj);if(!rows.length)return"<small>Enter percentages to see the projection.</small>";
+ let A=rows.reduce((a,r)=>a+r.att,0),T=rows.reduce((a,r)=>a+r.h,0),b=A,w=A;const pts=[];
+ if(T)pts.push({d:res.remFrom,b:b/T*100,w:w/T*100});
+ for(let d=new Date(res.remFrom);d<=END;d=addD(d,1)){if(res.H.has(iso(d)))continue;let any=false;
+  rows.forEach(r=>(TT[res.sec][DAYS[d.getDay()]]||[]).forEach((s,i)=>{if(s!==r.s)return;any=true;T++;const st=res.LM.get(iso(d)+"|"+i+"|"+s);if(st==="P"){b++;w++}else if(st!=="A")b++}));
+  if(any)pts.push({d:new Date(d),b:b/T*100,w:w/T*100})}
+ if(pts.length<2)return"<small>No classes remaining.</small>";
+ const W=640,H=270,L=40,Rr=14,Tp=12,Bm=34,mn=Math.max(0,Math.floor(Math.min(60,Math.min(...pts.map(p=>p.w)))/10)*10),span=END-res.remFrom||1;
+ const x=d=>L+(W-L-Rr)*(d-res.remFrom)/span,y=v=>Tp+(H-Tp-Bm)*(100-v)/(100-mn);
+ const path=k=>pts.map((p,i)=>(i?"L":"M")+x(p.d).toFixed(1)+" "+y(p[k]).toFixed(1)).join(" ");
+ let g=`<svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="Projected attendance to end of semester">`;
+ for(let v=mn;v<=100;v+=10)g+=`<line x1="${L}" x2="${W-Rr}" y1="${y(v)}" y2="${y(v)}" stroke="var(--bd)"/><text x="${L-5}" y="${y(v)+3}" font-size="10" text-anchor="end" fill="var(--mu)">${v}</text>`;
+ [[75,"var(--er)"],[90,"var(--ok)"]].forEach(([v,c])=>{if(v>=mn)g+=`<line x1="${L}" x2="${W-Rr}" y1="${y(v)}" y2="${y(v)}" stroke="${c}" stroke-dasharray="5 4"/>`});
+ g+=`<path d="${path("b")}" fill="none" stroke="var(--ac)" stroke-width="2.5"/><path d="${path("w")}" fill="none" stroke="var(--er)" stroke-width="2.5"/>
+ <text x="${L}" y="${H-12}" font-size="10" fill="var(--mu)">${nice(res.remFrom)}</text><text x="${W-Rr}" y="${H-12}" font-size="10" text-anchor="end" fill="var(--mu)">${nice(END)}</text>
+ <text x="${W-Rr-4}" y="${y(pts.at(-1).b)-6}" font-size="11" text-anchor="end" fill="var(--ac)">${fmt(pts.at(-1).b)}%</text><text x="${W-Rr-4}" y="${y(pts.at(-1).w)+14}" font-size="11" text-anchor="end" fill="var(--er)">${fmt(pts.at(-1).w)}%</text></svg>`;
+ return g}
+function chartsHTML(res){const rows=res.rows;if(!rows.length)return"";
+ const safe=rows.filter(r=>!r.lost&&r.cur>=75).length,rec=rows.filter(r=>!r.lost&&r.cur<75).length,lost=rows.filter(r=>r.lost).length;
+ return `<div class="card charts"><h2>📊 Attendance health</h2>
+ <div class="half"><div style="text-align:center">${donut(rows)}</div><div><b>${safe}</b> subject(s) safe (≥75%) · <b>${rec}</b> in recoverable detention zone · <b style="color:var(--er)">${lost}</b> irreversible<br><small>The ring shows your overall attended/held ratio across the subjects you entered.</small></div></div>
+ <div><b>By subject</b> <small>(bar = now; faded bar = best possible final; dashed lines = 75% and 90%)</small>${barChart(rows)}</div>
+ <div><div class="row" style="align-items:end"><div><b>Projection to 29 Nov</b> <div class="leg"><span><i style="background:var(--ac)"></i>attend every free class</span><span><i style="background:var(--er)"></i>skip every free class</span></div></div>
+ <div style="flex:0 0 220px"><select id="chSub" onchange="$('lc').innerHTML=lineChart(LAST,this.value)"><option value="*">Overall</option>${rows.map(r=>`<option>${esc(r.s)}</option>`).join("")}</select></div></div><div id="lc">${lineChart(res,"*")}</div></div></div>`}
+
+/* ---------- dashboard render ---------- */
+function calc(scroll){
+ const res=LAST=compute(),{rows,held,rem,upto,p}=res,sum=o=>Object.values(o).reduce((a,b)=>a+b,0);
+ let html=`<div class="card"><b>Snapshot:</b> ${sum(held)} classes held so far · ${sum(rem)} remaining until 29 Nov`+(upto?` · ${sum(upto)} between now and planning date`:"")+(LV.length?` · <b>${LV.length}</b> OD/leave entr${LV.length>1?"ies":"y"} applied`:"")+`</div>`+chartsHTML(res);
+ rows.forEach(r=>{const cls=r.lost?"bad":(r.cur<75||(r.n75>=r.free*.8&&r.free>0))?"warn":"ok",
+  tag=r.lost?"IRREVERSIBLE DETENTION":r.cur<75?"Detention zone – recoverable":r.cur<90?"Safe (75–90%)":"Above 90% 🎉";let extra="";
+  if(upto){const u=upto[r.s];let inw=0;res.LM.forEach((v,k)=>{const q=k.split("|");if(q[2]===r.s&&q[0]<=iso(p))inw++});const fu=u-inw;
+   extra=r.lost?"":`<div class="m" style="margin-top:8px"><span>Until ${$("plan").value}: ${u} classes of this subject (${fu} free)</span><b>Attend ≥ ${Math.min(fu,Math.max(0,r.n75-(r.free-fu)))} (75%) · ≥ ${Math.min(fu,Math.max(0,r.n90-(r.free-fu)))} (90%)</b><small>Minimum needed in this window if you skip every free class afterwards.</small></div>`}
+  html+=`<div class="res ${cls}"><h3>${esc(r.s)}<span class="tag">${tag}</span></h3>
+  ${r.lost?`<div class="alert">🚨 IRREVERSIBLE DETENTION — even attending all ${r.free} free remaining classes${r.fp?" (plus your "+r.fp+" OD/medical)":""}, you can reach only ${fmt(r.best)}% (need 75%). Contact your faculty/HoD about condonation.</div>`:""}
+  <div class="bar"><i style="width:${Math.min(100,r.cur)}%"></i><u style="left:75%"></u><u style="left:90%"></u></div>
+  <div class="grid"><div class="m"><span>Now (est. ${r.att.toFixed(1)}/${r.h} attended)</span><b>${fmt(r.cur)}%</b></div>
+  <div class="m"><span>Classes left${r.fp||r.fa?` (${r.fp} OD/med · ${r.fa} leave)`:""}</span><b>${r.R}</b></div>
+  <div class="m"><span>Must attend for 75%</span><b>${r.lost?"Impossible":r.n75}</b></div>
+  <div class="m"><span>Must attend for 90%</span><b>${r.lost90?"Impossible":r.n90}</b></div>
+  <div class="m"><span>Can skip &amp; stay ≥75%</span><b>${r.lost?0:r.skip75}</b></div>
+  <div class="m"><span>Final % if you attend all free</span><b>${fmt(r.best)}%</b></div>
+  <div class="m"><span>Final % if you skip all free</span><b>${fmt(r.worst)}%</b></div></div>${extra}
+  ${!r.lost&&r.lost90?`<small>90% is no longer reachable; aim for 75%.</small>`:""}</div>`});
+ $("out").innerHTML=html;if(scroll)$("out").scrollIntoView({behavior:"smooth"})}
+const live=()=>{if(LAST)calc(false)};
+
+/* ---------- OD / leave simulator ---------- */
+const TN={od:"On-Duty",med:"Medical",absent:"Leave"};
+function renderLV(){$("lvList").innerHTML=LV.map((l,i)=>`<span class="chip">${TN[l.type]} · ${esc(l.subj==="*"?"All subjects":l.subj)} · ${nice(parse(l.from))}${l.from!==l.to?"–"+nice(parse(l.to)):""}<button onclick="LV.splice(${i},1);renderLV();live()" aria-label="remove">✕</button></span>`).join("")||"<small>No entries yet.</small>"}
+$("lvAdd").onclick=()=>{const f=$("lvF").value,e=$("lvE").value||f;if(!f||parse(e)<parse(f)){alert("Pick a valid From/To date range.");return}
+ LV.push({subj:$("lvS").value,type:$("lvT").value,from:f,to:e});renderLV();if(LAST)calc(false);else if(document.querySelector("#subs input[value]:not([value=''])")||[...document.querySelectorAll("#subs input")].some(i=>i.value!==""))calc(true)};
+$("lvClr").onclick=()=>{LV=[];renderLV();live()};
+
+/* ---------- Attendance Advisor (in-browser, rule-based NLU + exact math) ---------- */
+const NUM={a:1,an:1,one:1,two:2,three:3,four:4,five:5,six:6,seven:7,eight:8,nine:9,ten:10,fourteen:14};
+const STOP=new Set(["and","of","for","the","lab"]);
+const ALIAS={maths:["calculus","transforms"],math:["calculus","transforms"],mathematics:["calculus","transforms"],calc:["calculus"],pps:["programming"],coding:["programming"],c:[],dld:["digital"],bio:["biology"],coa:["computer"],emt:["electromagnetic"],em:["electromagnetic"],ssd:["solid"],uhv:["universal"],chem:["chemistry"],ethics:["ethics"],verbal:["verbal"],social:["social"],eng:["engineering"],workshop:["workshop"],german:["german"],japanese:["japanese"],yoga:["yoga"],nss:["nss"],medphy:["medical"]};
+function findSubj(q,sec){const ql=q.toLowerCase(),toks=ql.match(/[a-z]+/g)||[],ex=[];toks.forEach(t=>{ex.push(t);(ALIAS[t]||[]).forEach(a=>ex.push(a))});
+ const wantLab=/\blab\b|laboratory/.test(ql);let best=null,bs=0;
+ subjects(sec).forEach(s=>{const sl=s.toLowerCase();let sc=ql.includes(sl)?10:0;
+  sl.split(/[^a-z]+/).filter(w=>w.length>=3&&!STOP.has(w)).forEach(w=>{if(ex.some(t=>t===w||(t.length>=4&&w.startsWith(t))))sc+=2});
+  if(sc&&/lab/.test(sl)!==wantLab)sc-=1;if(sc>bs){bs=sc;best=s}});return best}
+function findDate(q,base){let m;
+ if(m=q.match(/\d{4}-\d\d-\d\d/))return parse(m[0]);
+ if(/day after tomorrow/.test(q))return addD(base,2);if(/\btomorrow\b/.test(q))return addD(base,1);if(/\btoday\b/.test(q))return base;
+ const MO="jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec",mi=s=>MO.split("|").indexOf(s.slice(0,3));
+ if(m=q.match(new RegExp("(\\d{1,2})(?:st|nd|rd|th)?\\s*(?:of\\s*)?("+MO+")[a-z]*")))return new Date(2026,mi(m[2]),+m[1],12);
+ if(m=q.match(new RegExp("("+MO+")[a-z]*\\s*(\\d{1,2})\\b")))return new Date(2026,mi(m[1]),+m[2],12);
+ if(m=q.match(/\b(sun|mon|tue|wed|thu|fri|sat)[a-z]*/)){const t=DAYS.findIndex(d=>d.toLowerCase()===m[1]);let d=addD(base,1);while(d.getDay()!==t)d=addD(d,1);if(/next/.test(q)&&(d-base)/864e5<7)d=addD(d,0);return d}
+ return null}
+let PEND=[];
+function answer(q){const ql=q.toLowerCase(),res=compute(),sec=res.sec;
+ if(/^(hi|hello|hey|help)\b|what can you do/.test(ql))return help();
+ if(!res.rows.length)return"I can't see any attendance numbers yet 🙈 — enter your current % for your subjects in the dashboard, then ask me again.";
+ const subj=findSubj(q,sec),row=subj&&res.rows.find(r=>r.s===subj),tomorrow=addD(res.t,1);
+ if(subj&&!row)return`You haven't entered a percentage for <b>${esc(subj)}</b> yet — add it in the dashboard and I'll run the numbers.`;
+ const mDur=ql.match(/(\d+|an?|one|two|three|four|five|six|seven|eight|nine|ten|fourteen)[\s-]*(day|days|week|weeks)\b/),dur=mDur?(+mDur[1]||NUM[mDur[1]])*(/week/.test(mDur[2])?7:1):0;
+ const leaveW=/leave|absent|sick|\bill\b|fever|medical|hospital|unwell|\bod\b|on[\s-]?duty|bunk|skip|miss|off\b|holiday|not (?:attend|come|go)|won'?t (?:attend|come)/.test(ql);
+ const hasWhen=dur||/tomorrow|today|next|this week|monday|tuesday|wednesday|thursday|friday|saturday|\d{4}-\d\d-\d\d|\b\d{1,2}(?:st|nd|rd|th)?\s*(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)|\b(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\s*\d/.test(ql);
+ if(leaveW&&hasWhen)return simulate(q,ql,res,subj,dur,tomorrow);
+ if(/how many.*(skip|bunk|miss|leave|absent)|can i (skip|bunk|miss)|(skip|bunk).*(how many|max)/.test(ql))return skipAns(res,row);
+ if(/how many.*(attend|go|need|must)|need to attend|must attend|minimum|required|to (reach|get|maintain|stay)/.test(ql))return needAns(res,row);
+ if(/(safe|status|summary|overall|danger|risk|worst|lowest|weak|how am i|detention|where do i stand|attendance)/.test(ql))return row?subjLine(row,true):overview(res);
+ return row?subjLine(row,true):"Hmm, I didn't quite get that 🤔<br>"+help()}
+function help(){return"I read your dashboard numbers and do the math for you. Try:<br>• <i>If I take a 3-day sick leave starting tomorrow, will my Chemistry drop below 75%?</i><br>• <i>How many classes can I skip in Chemistry?</i><br>• <i>Am I safe? Which subject is in danger?</i><br>• <i>What if I have OD from 5 Oct to 7 Oct?</i>"}
+function stat(r){return r.lost?"🚨 <b>irreversible detention</b> (max possible "+fmt(r.best)+"%)":r.cur<75?"⚠️ in the detention zone (recoverable)":r.cur<90?"✅ safe (above 75%)":"🎉 above 90%"}
+function subjLine(r,full){let t=`<b>${esc(r.s)}</b>: ${fmt(r.cur)}% now — ${stat(r)}.`;
+ if(full)t+=`<br>${r.R} classes left. ${r.lost?"Even attending all of them is not enough for 75%. Speak to your faculty/HoD about condonation.":`You must attend <b>${r.n75}</b> more to finish at 75% and <b>${r.lost90?"— (90% unreachable)":r.n90}</b> for 90%. You can skip up to <b>${r.skip75}</b> and still reach 75%.`}`;return t}
+function overview(res){const rs=[...res.rows].sort((a,b)=>a.cur-b.cur),bad=rs.filter(r=>r.lost),low=rs.filter(r=>!r.lost&&r.cur<75);
+ let t=bad.length?`🚨 <b>${bad.length} subject(s) already in irreversible detention</b>: ${bad.map(r=>esc(r.s)).join(", ")}.<br>`:low.length?`⚠️ ${low.length} subject(s) below 75% but recoverable.<br>`:"✅ All entered subjects are at or above 75%.<br>";
+ return t+rs.map(r=>`• ${esc(r.s)}: ${fmt(r.cur)}% — need ${r.lost?"impossible":r.n75+" of "+r.free}, can skip ${r.lost?0:r.skip75}`).join("<br>")+`<br>Lowest: <b>${esc(rs[0].s)}</b>.`}
+function skipAns(res,r){if(r)return r.lost?`${subjLine(r)}<br>There's no room to skip — even full attendance can't reach 75%.`:`You can skip up to <b>${r.skip75}</b> of the ${r.free} free remaining <b>${esc(r.s)}</b> classes and still finish at 75%${r.lost90?"":` (or <b>${r.skip90}</b> if you want to keep 90%)`}. Skip more than that and you're in detention.`;
+ return"Skip budget (to finish ≥75%):<br>"+res.rows.map(x=>`• ${esc(x.s)}: ${x.lost?"none — irreversible":x.skip75+" of "+x.free}`).join("<br>")}
+function needAns(res,r){if(r)return r.lost?subjLine(r,true):`For <b>${esc(r.s)}</b> attend at least <b>${r.n75}</b> of the next ${r.free} classes (${r.free?(r.n75/r.free*100).toFixed(0):0}%) to end at 75%${r.lost90?"; 90% is out of reach.":`, or <b>${r.n90}</b> to reach 90%.`}`;
+ return"Classes you must still attend:<br>"+res.rows.map(x=>`• ${esc(x.s)}: ${x.lost?"75% impossible":x.n75+" for 75% / "+(x.lost90?"–":x.n90)+" for 90%"}`).join("<br>")}
+function simulate(q,ql,res,subj,dur,tomorrow){
+ const isOD=/\bod\b|on[\s-]?duty/.test(ql),sick=/sick|\bill\b|fever|medical|hospital|unwell|doctor/.test(ql),type=isOD?"od":"absent";
+ const parts=ql.split(/\b(?:till|until|through|to)\b/);let s0=findDate(parts[0],res.t),e0=parts[1]?findDate(parts[1],res.t):null;
+ if(/this week/.test(ql)&&!s0){s0=res.t;e0=addD(res.t,6-((res.t.getDay()+6)%7))}
+ if(/next week/.test(ql)&&!s0){const d=addD(res.t,8-((res.t.getDay()+6)%7)-1+1);s0=addD(res.t,7-((res.t.getDay()+6)%7));e0=addD(s0,5)}
+ const start=s0||tomorrow,end=e0||(dur?addD(start,dur-1):start);
+ if(end<res.remFrom)return"That date range is already in the past — it's already reflected in your current percentage.";
+ const from=start<res.remFrom?res.remFrom:start,ex={subj:subj||"*",type,from:iso(from),to:iso(end)},sim=compute([ex]);
+ const targets=subj?[subj]:res.rows.map(r=>r.s),days=Math.round((end-from)/864e5)+1,cw=count(res.sec,from,end,res.H),cu=count(res.sec,res.remFrom,end,res.H);
+ const key=PEND.push(ex)-1;let out=[];
+ targets.forEach(s=>{const r0=res.rows.find(r=>r.s===s),r1=sim.rows.find(r=>r.s===s);if(!r0||!r1||!cw[s])return;
+  const run=(r0.att+(isOD?cu[s]:cu[s]-cw[s]))/(r0.h+cu[s])*100,runOK=(r0.att+cu[s])/(r0.h+cu[s])*100;
+  const below=run<75;let t=`<b>${esc(s)}</b> (now ${fmt(r0.cur)}%): ${cw[s]} class${cw[s]>1?"es":""} in the window.`;
+  if(isOD)t+=` As OD they count as present → ${fmt(run)}% right after, and you can finish at up to <b>${fmt(r1.best)}%</b>.`;
+  else{t+=` If absent, attendance right after the leave ≈ <b>${fmt(run)}%</b> → ${below?"❌ <b>drops below 75%</b>":"✅ stays above 75%"}.`;
+   t+=r1.lost?`<br>🚨 <b>This makes detention irreversible</b>: even attending every other class gives only ${fmt(r1.best)}%.`:`<br>By 29 Nov (attend every other class) you'd finish at <b>${fmt(r1.best)}%</b>${r1.best<90?"":" 🎉"}; you'd then need <b>${r1.n75}</b> of the remaining ${r1.free} classes to stay ≥75%${r1.n75>=r1.free*.8?" — very tight!":"."}`;
+   if(sick)t+=`<br>💡 If your medical leave is accepted/credited as present, it won't hurt: ≈ ${fmt(runOK)}% right after. Keep the medical certificate ready.`}
+  out.push(t)});
+ if(!out.length)return`${subj?esc(subj)+" has":"Your subjects have"} no classes between ${nice(from)} and ${nice(end)}, so there's no impact.`;
+ const flagged=!isOD&&targets.filter(s=>{const r0=res.rows.find(r=>r.s===s),r1=sim.rows.find(r=>r.s===s);return r0&&r1&&cw[s]&&(r1.lost||(r0.att+cu[s]-cw[s])/(r0.h+cu[s])*100<75)});
+ let head=`🗓 ${isOD?"OD":sick?"Sick/medical leave":"Leave"} · ${nice(from)}${days>1?"–"+nice(end):""} (${days} day${days>1?"s":""})<br>`;
+ if(!subj)head+=flagged.length?`⚠️ <b>${flagged.length} subject(s) at risk</b>: ${flagged.map(esc).join(", ")}.<br>`:"✅ No subject falls below 75% because of this.<br>";
+ return head+out.join("<br><br>")+`<br><br><button class="g" onclick="addPend(${key})">Add to OD/Leave simulator</button>`}
+function addPend(k){LV.push(PEND[k]);renderLV();calc(false);bot("Added ✔ — the charts and numbers above now include it.")}
+function bot(h){const d=document.createElement("div");d.className="b";d.innerHTML=h;$("msgs").appendChild(d);$("msgs").scrollTop=1e9}
+function user(t){const d=document.createElement("div");d.className="b u";d.textContent=t;$("msgs").appendChild(d)}
+function ask(t){t=t.trim();if(!t)return;user(t);$("q").value="";let a;try{a=answer(t)}catch(e){a="Sorry, I hit a snag reading that. Try rephrasing (e.g. “3-day leave from tomorrow, Chemistry”)."}setTimeout(()=>bot(a),250)}
+function sugg(){const s=subjects($("sec").value),n=(s.find(x=>/chem/i.test(x))||s[0]);
+ $("sug").innerHTML="";[`If I take a 3-day sick leave starting tomorrow, will my ${n} attendance drop below 75%?`,`How many classes can I skip in ${n}?`,"Which subject is in danger?"].forEach(t=>{const b=document.createElement("button");b.textContent=t.length>48?t.slice(0,46)+"…":t;b.onclick=()=>ask(t);$("sug").appendChild(b)})}
+$("fab").onclick=()=>{$("chat").classList.toggle("on");if($("chat").classList.contains("on")){if(!$("msgs").children.length)bot("Hi! I'm your <b>Attendance Advisor</b> 👋 I use the numbers on your dashboard.<br>"+help());sugg();$("q").focus()}};
+$("cx").onclick=()=>$("chat").classList.remove("on");$("send").onclick=()=>ask($("q").value);$("q").onkeydown=e=>{if(e.key==="Enter")ask($("q").value)};
+
+/* ---------- wiring ---------- */
+function loadData(txt){try{let d;txt=txt.trim();
+ if(txt[0]=="{")d=JSON.parse(txt);else{d={};txt.split(/\r?\n/).forEach(l=>{const c=l.split(",").map(x=>x.trim().replace(/^"|"$/g,""));if(c.length<3||/^section$/i.test(c[0]))return;const dy=c[1].slice(0,3),day=dy[0].toUpperCase()+dy.slice(1).toLowerCase();((d[c[0]]??={})[day]??=[]).push(c[2])})}
+ if(!Object.keys(d).length)throw"empty";TT=d;fillSec();$("msg").textContent="Loaded "+Object.keys(d).length+" sections."}catch(e){$("msg").textContent="Could not parse timetable: "+e}}
+$("load").onclick=()=>loadData($("paste").value);$("file").onchange=e=>{const f=e.target.files[0];if(f)f.text().then(t=>{$("paste").value=t;loadData(t)})};
+$("sec").onchange=()=>{renderSubs();sugg()};$("go").onclick=()=>calc(true);
+["today","plan","tdone","hol"].forEach(i=>$(i).addEventListener("change",live));$("subs").addEventListener("input",live);
+let n=new Date();n.setHours(12);$("today").value=iso(n);const pd=addD(n,14);$("plan").value=iso(pd>END?END:pd);
+$("lvF").value=$("lvE").value=iso(addD(n,1));
+$("today").min=iso(START);$("today").max=iso(END);$("plan").max=iso(END);
+fillSec();
+</script></main></body></html>
